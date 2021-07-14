@@ -7,10 +7,10 @@ from tkinter import *
 
 # Veri Tabanı Oluşturma
 
-veriler= sqlite3.connect('stok.db')
-market = veriler.cursor()
-market.execute("create table if not exists urun(urun_adi TEXT, urun_fiyati TEXT, urun_kdv TEXT)")
-market.execute("create table if not exists stok(urun_id integer,urun_adi TEXT, adet integer)")
+veriler= sqlite3.connect('stok.db') # verileri stok adını verdiğim veritabanı dosyasıyla bağlantılı hale getirdim.
+stok = veriler.cursor() #
+stok.execute("create table if not exists urun(urun_adi TEXT, urun_fiyati TEXT, urun_kdv TEXT)")
+stok.execute("create table if not exists stok(urun_id integer,urun_adi TEXT, adet integer)")
 veriler.commit()
 
 
@@ -47,22 +47,22 @@ def urun_pen():
         c = veri3.get()
 
         def deger():
-            market.execute("insert into urun values(?,?,?)", [a, b, c])
+            stok.execute("insert into urun values(?,?,?)", [a, b, c])
             veriler.commit()
 
             #Stok Veri Tabanına Yazma
-            market.execute("""SELECT rowid,urun_adi FROM urun""")
-            kontrol_ara = market.fetchall()
+            stok.execute("""SELECT rowid,urun_adi FROM urun""")
+            kontrol_ara = stok.fetchall()
             for i in kontrol_ara:
                 stok_ad_kontrol = i[1]
                 urun_id_no=i[0]
                 if stok_ad_kontrol == a:
-                    market.execute("insert into stok values(?,?,?)", [urun_id_no, a, '0'])
+                    stok.execute("insert into stok values(?,?,?)", [urun_id_no, a, '0'])
                     veriler.commit()
 
         kod = 0
-        market.execute("""SELECT urun_adi FROM urun""")
-        kontrol = market.fetchall()
+        stok.execute("""SELECT urun_adi FROM urun""")
+        kontrol = stok.fetchall()
         for i in kontrol:
             ad_kontrol = i[0]
             if ad_kontrol == a:
@@ -77,24 +77,24 @@ def urun_pen():
 
             for i in liste.get_children():
                 liste.delete(i)
-            market.execute("""SELECT rowid,urun_adi,urun_fiyati, urun_kdv  FROM urun""")
-            urun_liste = market.fetchall()
+            stok.execute("""SELECT rowid,urun_adi,urun_fiyati, urun_kdv  FROM urun""")
+            urun_liste = stok.fetchall()
             for i in urun_liste:
                 liste.insert(parent='', index='end', values=(i[0], i[1], i[2], i[3]))
 
     def urun_silme():
         s = veri1.get()
         # Stoktan Kayıt Silme
-        market.execute("""SELECT rowid,urun_adi FROM urun""")
-        kontrol_ara = market.fetchall()
+        stok.execute("""SELECT rowid,urun_adi FROM urun""")
+        kontrol_ara = stok.fetchall()
         for i in kontrol_ara:
             stok_ad_kontrol = i[1]
             if stok_ad_kontrol == s:
-                sil=i[0]
+                sil_id=i[0]
         msg = messagebox.askyesno("Silme işlemi yapıyorsunuz.", "Emin misiniz??")
         if msg == True:
-            market.execute("delete from urun where urun_adi= ? ", [s])
-            market.execute("delete from stok where urun_id= ? ", [sil])
+            stok.execute("delete from urun where urun_adi= ? ", [s])
+            stok.execute("delete from stok where urun_id= ? ", [sil_id])
             veriler.commit()
             veri1.delete(0, "end")
             veri2.delete(0, "end")
@@ -102,8 +102,8 @@ def urun_pen():
             msj3("Kaydınız başarıyla silindi!")
             for i in liste.get_children():
                 liste.delete(i)
-            market.execute("""SELECT rowid,urun_adi,urun_fiyati, urun_kdv  FROM urun""")
-            urun_liste = market.fetchall()
+            stok.execute("""SELECT rowid,urun_adi,urun_fiyati, urun_kdv  FROM urun""")
+            urun_liste = stok.fetchall()
             for i in urun_liste:
                 liste.insert(parent='', index='end', values=(i[0], i[1], i[2], i[3]))
 
@@ -114,7 +114,7 @@ def urun_pen():
         item = liste.item(al)
         sec_id_no = item['values'][0]
 
-        market.execute("update urun set urun_adi='{}', urun_fiyati='{}', urun_kdv='{}' WHERE rowid='{}'".format(veri1.get(),
+        stok.execute("update urun set urun_adi='{}', urun_fiyati='{}', urun_kdv='{}' WHERE rowid='{}'".format(veri1.get(),
                                                                                                             veri2.get(),
                                                                                                             veri3.get(),
                                                                                                             sec_id_no))
@@ -126,8 +126,8 @@ def urun_pen():
         msj4("Güncelleme")
         for i in liste.get_children():
             liste.delete(i)
-        market.execute("""SELECT rowid,urun_adi,urun_fiyati, urun_kdv  FROM urun""")
-        urun_liste = market.fetchall()
+        stok.execute("""SELECT rowid,urun_adi,urun_fiyati, urun_kdv  FROM urun""")
+        urun_liste = stok.fetchall()
         for i in urun_liste:
             liste.insert(parent='', index='end', values=(i[0], i[1], i[2], i[3]))
 
@@ -168,8 +168,8 @@ def urun_pen():
     liste.heading("fiyat", text="Ürün Fiyatı")
     liste.heading("kdv", text="KDV %")
 
-    market.execute("""SELECT rowid, urun_adi, urun_fiyati, urun_kdv FROM urun""")
-    urun_liste = market.fetchall()
+    stok.execute("""SELECT rowid, urun_adi, urun_fiyati, urun_kdv FROM urun""")
+    urun_liste = stok.fetchall()
     for i in urun_liste:
         liste.insert(parent='', index='end', values=(i[0], i[1], i[2], i[3]))
 
@@ -191,8 +191,8 @@ def stok_menu():
     def stok_ekle_cikar(args):
         ekle = int(veri4.get())
         a = combo.get()
-        market.execute("""SELECT urun_adi, adet FROM stok""")
-        kontrol_ara = market.fetchall()
+        stok.execute("""SELECT urun_adi, adet FROM stok""")
+        kontrol_ara = stok.fetchall()
         for i in kontrol_ara:
             stok_ad_kontrol = i[0]
             if stok_ad_kontrol == a:
@@ -201,13 +201,13 @@ def stok_menu():
             son_stok = mevcut_stok + ekle
         if args==2:
             son_stok = mevcut_stok - ekle
-        market.execute("update stok set adet='{}' WHERE urun_adi='{}'".format(son_stok, a))
+        stok.execute("update stok set adet='{}' WHERE urun_adi='{}'".format(son_stok, a))
         veriler.commit()
         veri4.delete(0, "end")
         for i in liste.get_children():
             liste.delete(i)
-        market.execute("""SELECT urun_id, urun_adi, adet FROM stok""")
-        stok_liste = market.fetchall()
+        stok.execute("""SELECT urun_id, urun_adi, adet FROM stok""")
+        stok_liste = stok.fetchall()
         for i in stok_liste:
             liste.insert(parent='', index='end', values=(i[0], i[1], i[2]))
 
@@ -225,8 +225,8 @@ def stok_menu():
 
     combo= Combobox()
     combo.place(x=320, y=40)
-    market.execute("""SELECT urun_adi, adet FROM stok""")
-    stok_liste = market.fetchall()
+    stok.execute("""SELECT urun_adi, adet FROM stok""")
+    stok_liste = stok.fetchall()
     for i in stok_liste:
         combo['values'] = tuple(list(combo['values']) + [str(i[0])])
 
@@ -246,8 +246,8 @@ def stok_menu():
     liste.heading("Ad", text="Ürün Adı")
     liste.heading("adet", text="Adet")
 
-    market.execute("""SELECT urun_id,urun_adi, adet FROM stok""")
-    stok_liste = market.fetchall()
+    stok.execute("""SELECT urun_id,urun_adi, adet FROM stok""")
+    stok_liste = stok.fetchall()
     for i in stok_liste:
         liste.insert(parent='', index='end', values=(i[0], i[1], i[2]))
 
